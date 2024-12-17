@@ -8,9 +8,7 @@
 
 int main(){
     
-    while (1) {
-        
-        
+    while (1) { 
 
         // printing the  prompt
         printf("myPrompt> ");
@@ -21,13 +19,10 @@ int main(){
         fgets(buffer, sizeof(buffer), stdin);
         buffer[strcspn(buffer, "\n")] = '\0'; // replacing newline with null terminator
 
-        
 
         // parse the command
         char *token;
         token = strtok(buffer, " ");
-
-        
 
 
         // creating argument array
@@ -43,10 +38,8 @@ int main(){
         args[word_count] = NULL;
 
 
-
-        if (args[0] == "NULL") continue;
-        if (args[0] == "exit") break;
-
+        if (args[0] == NULL) continue;
+        if (strcmp(args[0], "exit") == 0) break;
 
 
         // creating a child process using fork() syscall
@@ -56,15 +49,15 @@ int main(){
             if(execvp(args[0], args) == -1){
                 perror("Something went wrong!");
                 exit(1);
-            } else if (pid > 1) {
-                wait(NULL); 
-            } else {
-                perror("Fork Failed!");
             }
+        } else if (pid > 1) {
+                wait(NULL); 
+        } else {
+                perror("Fork Failed!");
         }
-        
-
     }
+
+    printf("Exited the shell");
 
     return 0;
 }
