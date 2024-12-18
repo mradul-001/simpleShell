@@ -1,38 +1,36 @@
-#include "interactive.h"
+#include "../headers.h"
+#include "stdlib.h"
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
 #define MAX_COMMANDS 5
-#define MAX_WORDS 20
+#define MAX_WORDS 30
 
-int execute_interactive() {
+int execute_batch(char *fileName) {
 
-  _Bool exit_flag = 0;
+  // opening the batch file
+  FILE *fptr = fopen(fileName, "r");
 
-  while (!exit_flag) {
+  // storing array
+  char contentOfBatchFile[255];
 
-    // printing the prompt
-    printf("myPrompt> ");
+  int RUN = 1;
 
-    // take the command from user
-    char buffer[50];
-    fgets(buffer, sizeof(buffer), stdin);
-    buffer[strcspn(buffer, "\n")] =
-        '\0'; // replace newline with null terminator
+  // repeatedly reading the batchfile and executing the commands
+  while (fgets(contentOfBatchFile, sizeof(contentOfBatchFile), fptr) && RUN == 1) {
 
-    // parse the command
-    char *token;
-    token = strtok(buffer, ";");
+    // replace newline character at the end of the line with \0
+    contentOfBatchFile[strcspn(contentOfBatchFile, "\n")] = '\0';
 
+    // get the commands out of the line
     char *commands[MAX_COMMANDS];
     int command_count = 0;
 
-    // make the command array
+    char *token = strtok(contentOfBatchFile, ";");
     while (token != NULL && command_count < MAX_COMMANDS) {
-      commands[command_count++] = strdup(token);
+      commands[command_count++] = token;
       token = strtok(NULL, ";");
     }
 
@@ -57,8 +55,8 @@ int execute_interactive() {
         continue;
 
       if (strcmp(args[0], "exit") == 0) {
-        exit_flag = 1;
-        continue;
+        RUN = 0;
+        break;
       }
 
       // create a child process using fork() syscall
@@ -75,13 +73,12 @@ int execute_interactive() {
         perror("Fork Failed!");
       }
     }
-
-    // free memory allocated for commands
-    for (int i = 0; i < command_count; i++) {
-      free(commands[i]);
-    }
   }
 
-  printf("Exited the shell\n");
+  printf("Exiting the shell");
+
+  // closing the file
+  fclose(fptr);
+
   return 0;
 }

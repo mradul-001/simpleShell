@@ -1,6 +1,13 @@
-shell: main.c
-	@ gcc main.c interactive.c batch.c -o shell
+CC = gcc
+SRC = main.c ./src/interactive.c ./src/batch.c ./src/custom/cd.c
+TARGET = shell
+
+all: $(TARGET)
+
+$(TARGET): $(SRC)
+	@ $(CC) $(SRC) -o $(TARGET)
 
 clean:
-	@ rm -f *.o
-	@ rm -f shell
+	@ rm -f *.o $(TARGET)
+
+.PHONY: all clean

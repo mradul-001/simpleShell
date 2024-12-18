@@ -1,36 +1,40 @@
-#include "batch.h"
-#include "stdlib.h"
+#include "../headers.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
 #define MAX_COMMANDS 5
-#define MAX_WORDS 30
+#define MAX_WORDS 20
 
-int execute_batch(char *fileName) {
+int execute_interactive() {
 
-  // opening the batch file
-  FILE *fptr = fopen(fileName, "r");
+  _Bool exit_flag = 0;
 
-  // storing array
-  char contentOfBatchFile[255];
+  while (!exit_flag) {
 
-  int RUN = 1;
+    // printing the prompt
+    char pwd[255]; // array to store pwd name
+    getcwd(pwd, 255);
+    printf("%s) ", pwd);
 
-  // repeatedly reading the batchfile and executing the commands
-  while (fgets(contentOfBatchFile, sizeof(contentOfBatchFile), fptr) && RUN == 1) {
+    // take the command from user
+    char buffer[50];
+    fgets(buffer, sizeof(buffer), stdin);
+    buffer[strcspn(buffer, "\n")] =
+        '\0'; // replace newline with null terminator
 
-    // replace newline character at the end of the line with \0
-    contentOfBatchFile[strcspn(contentOfBatchFile, "\n")] = '\0';
+    // parse the command
+    char *token;
+    token = strtok(buffer, ";");
 
-    // get the commands out of the line
     char *commands[MAX_COMMANDS];
     int command_count = 0;
 
-    char *token = strtok(contentOfBatchFile, ";");
+    // make the command array
     while (token != NULL && command_count < MAX_COMMANDS) {
-      commands[command_count++] = token;
+      commands[command_count++] = strdup(token);
       token = strtok(NULL, ";");
     }
 
@@ -51,12 +55,20 @@ int execute_batch(char *fileName) {
 
       args[word_count] = NULL; // NULL-terminate the args array
 
+      // checking if nothing is entered
       if (args[0] == NULL)
         continue;
 
+      // checking if used wants to exit
       if (strcmp(args[0], "exit") == 0) {
-        RUN = 0;
-        break;
+        exit_flag = 1;
+        continue;
+      }
+
+      // checking if the user wants to change the directory
+      if (strcmp(args[0], "cd") == 0) {
+        changeDir(args[1]);
+        continue;
       }
 
       // create a child process using fork() syscall
@@ -73,12 +85,13 @@ int execute_batch(char *fileName) {
         perror("Fork Failed!");
       }
     }
+
+    // free memory allocated for commands
+    for (int i = 0; i < command_count; i++) {
+      free(commands[i]);
+    }
   }
 
-  printf("Exiting the shell");
-
-  // closing the file
-  fclose(fptr);
-
+  printf("Exited the shell\n");
   return 0;
 }
