@@ -1,6 +1,5 @@
 shell: main.c
-	@ gcc -c main.c -o main.o
-	@ gcc main.o -o shell
+	@ gcc main.c interactive.c batch.c -o shell
 
 clean:
 	@ rm -f *.o
